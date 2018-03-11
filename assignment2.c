@@ -1,5 +1,6 @@
 //  
-//  prog2.c
+//  Eric Jiang
+//  prog3.c
 //  OS_Problem-2
 //
 
@@ -16,11 +17,8 @@
 #include "node.c"
 
 int x;
-int j = 0;
-char c[1000];
+char c[200];
 char s[200];
-char savedstrings[1000];
-//int sn = 0;
 FILE* fp;
 
 // reads the input file and places into c[n] array
@@ -43,31 +41,7 @@ void parse(char* filename){
 	}
 }
 
-// every node
-void first(char* filename){
-	char line[10];
-	FILE* fp;
-	int n = 0;
-	int i = 0;
-
-	fp = fopen(filename, "r");
-	//printf("Each Node saved in s[n] array: \n");
-	while(fgets(line, 10, fp) != NULL){
-		int z = -1;
-		while(++z < strlen(line)){
-			if((s[i] = line[z]) != ' '){
-			i++;
-			break;
-			}
-		}
-	}
-
-	/*while(s[n]){
-		printf("%c\n", s[n]);
-		n++;
-	}*/
-}
-
+//recursive tree node
 tree_node rNode(tree_node *tn, int cn, char left, char right)
 {
 		//Pipes may be added but will
@@ -153,29 +127,35 @@ void print_tree(tree_node * tree){
 	}
 }
 
-int main()
-{
-	fp = fopen("input2.txt", "r");
-	parse("input2.txt");
-	tree_node *root = NULL;
+int istxt(char filename[]) {
+	int l = strlen(filename);
+	//printf("filename: %s", filename);
 
-	//traverse through the input array to find numbers
-	/*while(c[n]){
-		//printf("%c\n", c[n]);
-		if(isdigit(c[n])){
-			int x = c[n] - '0';
-			printf("NUMBER: %d\n", x);
-			root = newNode(x,c[n-1]);
-			if(x=2){
-			rNode(root,x,c[n+1],c[n+2]);
-			}else if(x=1){
-			rNode(root,x,c[n+1],' ');
-			}else if(x=0){
-			rNode(root,x,' ',' ');
-			}
-			}
-		n++;
-	}*/
+	if (l < 4) {
+		return 0;
+	}
+
+	if (filename[l - 1] == 't' && filename[l - 2] == 'x' && filename[l - 3] == 't') {
+		return 1;
+	}
+
+	return 0;
+}
+
+void main(int argc, char *argv[])
+{
+	if(argc!=2){
+		printf("Invalid arguments - Please input ptree descriptor file.txt \n");
+		exit(-1);
+	}
+	if(!istxt(argv[1])){
+		printf("Invalid arguments - Input not a .txt file \n");
+		exit(-1);
+	}
+	printf("You have entered file: %s", argv[1]);
+	fp = fopen(argv[1], "r");
+	//parse("input2.txt");
+	tree_node *root = NULL;
 
 		fgets(s, 150, fp);
 		x = s[2] - '0';
@@ -191,7 +171,5 @@ int main()
 				//printf("===========FORMAT=============:\n");
 				//printf("left<-[Name | Original Children]->right\n");
 				print_tree(root);
-		//}
-	
 	fclose(fp);
 }
