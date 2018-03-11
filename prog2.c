@@ -14,11 +14,10 @@
 #include <sys/wait.h>
 #include "node.c"
 
-int shmid;
-int *values;
-int size;
+int x;
 char c[200];
 char s[200];
+FILE* fp;
 
 // reads the input file and places into c[n] array
 void parse(char* filename){
@@ -31,9 +30,9 @@ void parse(char* filename){
 
 	//printf("Each Node saved in c[n] array: \n");
 	while(fgets(line, 10, fp) != NULL){
-		int x = -1;
-		while(++x < strlen(line)){
-			if((c[i] = line[x]) != ' '){
+		int z = -1;
+		while(++z < strlen(line)){
+			if((c[i] = line[z]) != ' '){
 			i++;
 			}
 		}
@@ -50,9 +49,9 @@ void first(char* filename){
 	fp = fopen(filename, "r");
 	//printf("Each Node saved in s[n] array: \n");
 	while(fgets(line, 10, fp) != NULL){
-		int x = -1;
-		while(++x < strlen(line)){
-			if((s[i] = line[x]) != ' '){
+		int z = -1;
+		while(++z < strlen(line)){
+			if((s[i] = line[z]) != ' '){
 			i++;
 			break;
 			}
@@ -65,51 +64,63 @@ void first(char* filename){
 	}*/
 }
 
-
-//void traverse(char c){
-
-void rNode(tree_node tn, int cn, char left, char right)
+void rNode(tree_node *tn, int cn, char left, char right)
 {
-	printf("enters recursion\n");
-	//printf("%d\n", tn.children_no);
-	//printf("%c\n", tn.left->name);
-	//printf("%d\n", tn.left->children_no);
 	
-	if(tn.children_no == 0){
+	printf("rloop start\n");
+	if(tn->children_no == 0){
 		printf("entered child 0\n");
 		return;
 	}
-	else if(tn.children_no == 1){
+	else if(tn->children_no == 1){
 		printf("entered child 1\n");
-		tn.left = newNode(cn, left);
-		tn.right = NULL;
-		//rNode(*tn.left); 
+		fgets(s, 10, fp);
+		x = s[2] - '0';
+		tn->left = newNode(x,left);
+		printf("%c's left node created: %c\n", tn->name, tn->left->name);
+		tn->right = NULL;
+		rNode(tn->left, x, s[4], s[6]); 
 	}
-	else if(tn.children_no == 2){
+	else if(tn->children_no == 2){
 		printf("entered child 2\n");
-		tn.left = newNode(cn, left);
-		tn.right = newNode(cn, right);
-		//rNode(*tn.left); 
-		//rNode(*tn.right);
+		fgets(s, 10, fp);
+		x = s[2] - '0';
+		tn->left = newNode(x, left);
+		printf("%c's left node created: %c\n", tn->name, tn->left->name);
+		rNode(tn->left, x, s[4], s[6]); 
+		fgets(s, 10, fp);
+		x = s[2] - '0';
+		tn->right = newNode(x, right);
+		printf("%c's right node created: %c\n", tn->name, tn->right->name);
+		rNode(tn->right, x, s[4], s[6]); 
 	}
-	printf("exits recursion\n");
+	printf("\none recursive loop\n");
+}
+
+void print_inorder(tree_node * tree) {
+ if (tree) {
+     print_inorder(tree->left);
+     if (tree->left == NULL || tree->right == NULL)
+       return;
+     printf("%s<-[ %s]-> %s\n",tree->left->name,tree->name, tree->right->name);
+     print_inorder(tree->right);
+   }
 }
 
 int main()
 {
-	FILE* fp;
 	fp = fopen("input2.txt", "r");
 	int n = 0;
 	//values = malloc(100000*sizeof(int));
-	parse("input2.txt");
-	first("input2.txt");
+	//parse("input2.txt");
+	//first("input2.txt");
 	
 	tree_node *root = NULL;
 	//root = newNode(2,'A');
 	//root->left = newNode(0, 'B');
 	//printf("%c\n", root->left->name);
 	//rNode(*root);
-/*	//root = newNode(c[1],c[0]);
+	//root = newNode(c[1],c[0]);
 	//printf("children: %d nodename: %c\n", root->children_no,root->name);
 
 	//traverse through the input array to find numbers
@@ -124,42 +135,32 @@ int main()
 	}
 	// goes through c[n] array
 	// recursively calls everytime sees ' '
-
+/*
 	while(c[n]){
 		if(c[n] == '\n'){
 			printf("new node\n");
 			n++;
 		}
-		else if(c[n] == 'A'){
-			printf("A is retreived\n");
-			n++;
-		}
-		else if(c[n] == '1'){
-			printf("number is seen\n");
-			n++;
-		}
 		n++;
 	}
 */
-
-	char s[150];
 	int i = 0;
 
 	while(!feof(fp)){
 		fgets(s, 150, fp);
-		int x = s[2] - '0';
+		x = s[2] - '0';
 		printf("FIRST:%C CN: %d LEFT: %c RIGHT: %c\n", s[0], x, s[4], s[6]);
-			if(root){
-				printf("\nchild created\n");
-				rNode(*root, x, s[4], s[6]);
-			}
-			else{
+			if(!root){
 				printf("\nroot created\n");
 				root = newNode(x,s[0]);
-				rNode(*root, x, s[4], s[6]);
+				rNode(root, x, s[4], s[6]);
+				printf("\nexits recursion ROOT\n");
 			}
-	}
-
+			else
+				printf("root tree already exists\n");
+				//print_inorder(root);
+		}
 	
+
 	fclose(fp);
 }
