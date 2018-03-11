@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <string.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
@@ -15,13 +16,16 @@
 #include "node.c"
 
 int x;
-char c[200];
+int j = 0;
+char c[1000];
 char s[200];
+char savedstrings[1000];
+//int sn = 0;
 FILE* fp;
 
 // reads the input file and places into c[n] array
 void parse(char* filename){
-	char line[10];
+	char line[20];
 	FILE* fp;
 	int n = 0;
 	int i = 0;
@@ -29,7 +33,7 @@ void parse(char* filename){
 	fp = fopen(filename, "r");
 
 	//printf("Each Node saved in c[n] array: \n");
-	while(fgets(line, 10, fp) != NULL){
+	while(fgets(line, 20, fp) != NULL){
 		int z = -1;
 		while(++z < strlen(line)){
 			if((c[i] = line[z]) != ' '){
@@ -64,103 +68,130 @@ void first(char* filename){
 	}*/
 }
 
-void rNode(tree_node *tn, int cn, char left, char right)
+tree_node rNode(tree_node *tn, int cn, char left, char right)
 {
-	
-	printf("rloop start\n");
-	if(tn->children_no == 0){
-		printf("entered child 0\n");
-		return;
-	}
-	else if(tn->children_no == 1){
-		printf("entered child 1\n");
-		fgets(s, 10, fp);
-		x = s[2] - '0';
-		tn->left = newNode(x,left);
-		printf("%c's left node created: %c\n", tn->name, tn->left->name);
+		//Pipes may be added but will
+		//prevent 
+		
+	// if tree node has no children sleep and return *tn
+	if(!tn->children_no){
+		sleep(3);
+		tn->left = NULL;
 		tn->right = NULL;
-		rNode(tn->left, x, s[4], s[6]); 
+		printf(" - - SLEEPING - - HIT LEAF NODE - - SLEEPING - -\n");
+		
+		return *tn;
 	}
-	else if(tn->children_no == 2){
-		printf("entered child 2\n");
-		fgets(s, 10, fp);
-		x = s[2] - '0';
-		tn->left = newNode(x, left);
-		printf("%c's left node created: %c\n", tn->name, tn->left->name);
-		rNode(tn->left, x, s[4], s[6]); 
-		fgets(s, 10, fp);
-		x = s[2] - '0';
-		tn->right = newNode(x, right);
-		printf("%c's right node created: %c\n", tn->name, tn->right->name);
-		rNode(tn->right, x, s[4], s[6]); 
+	// If tree node has children fork
+	else if(tn->children_no){
+		pid_t piddy = fork();
+		//fork error
+		if(piddy<0){
+			perror("fork() error");
+			exit(-1);
+		}
+		//PARENT PROCESS: wait on child
+		if(piddy!=0){
+			printf("I'm in the parent %d, my child is %d\n", getpid(), piddy);
+			wait(NULL);
+		//CHILD PROCESS: execute recursive code
+		}else{
+			printf("I'm the child %d, my parent is %d\n", getpid(), getppid());
+		if(tn->children_no == 1){
+			//printf("entered node with 1 child  %c:\n\n", tn->name);
+			fgets(s, 10, fp);
+			x = s[2] - '0';
+			tn->left = newNode(x,left);
+			//printf("%c's LEFT node created: %c\n", tn->name, tn->left->name);
+			tn->right = NULL;
+			rNode(tn->left, x, s[4], s[6]); 
+		}
+		else if(tn->children_no == 2){
+			//printf("entered node with 2 children  %c:\n\n", tn->name);
+			fgets(s, 10, fp);
+			x = s[2] - '0';
+			tn->left = newNode(x, left);
+			//printf("%c's LEFT node created: %c\n", tn->name, tn->left->name);
+			rNode(tn->left, x, s[4], s[6]); 
+			pid_t piddy = fork();
+		//fork error
+		if(piddy<0){
+			perror("fork() error");
+			exit(-1);
+		}
+		//PARENT PROCESS: wait on child
+		if(piddy!=0){
+			//printf("I'm in the parent %d, my child is %d\n", getpid(), piddy);
+			wait(NULL);
+		//CHILD PROCESS: execute recursive code
+		}else{
+			//printf("I'm the child %d, my parent is %d\n", getpid(), getppid());
+			//printf("%c's RIGHT node created: %c\n", tn->name, tn->right->name);
+			fgets(s, 10, fp);
+			x = s[2] - '0';
+			tn->right = newNode(x, right);
+			rNode(tn->right, x, s[4], s[6]); 
+		}
+		}
+		}
 	}
-	printf("\none recursive loop\n");
 }
 
-void print_inorder(tree_node * tree) {
- if (tree) {
-     print_inorder(tree->left);
-     if (tree->left == NULL || tree->right == NULL)
-       return;
-     printf("%s<-[ %s]-> %s\n",tree->left->name,tree->name, tree->right->name);
-     print_inorder(tree->right);
-   }
+void print_tree(tree_node * tree){
+	if(tree->left == NULL && tree->right == NULL){
+		printf(" <-[%c | %d]-> \n", tree->name, tree->children_no);
+	}else if(tree->left && tree->right == NULL){
+		printf("%c <-[%c | %d]-> \n", tree->left->name,tree->name, tree->children_no);
+		print_tree(tree->left);
+	}else if(tree->left == NULL && tree->right){
+		printf(" <-[%c | %d]-> %c\n", tree->name, tree->children_no, tree->right->name);
+		print_tree(tree->right);
+	}else if(tree->left && tree->right){
+		printf("%c <-[%c | %d]-> %c\n", tree->left->name, tree->name, tree->children_no, tree->right->name);
+		print_tree(tree->left);
+		print_tree(tree->right);
+	}
 }
 
 int main()
 {
 	fp = fopen("input2.txt", "r");
-	int n = 0;
-	//values = malloc(100000*sizeof(int));
-	//parse("input2.txt");
-	//first("input2.txt");
-	
+	parse("input2.txt");
 	tree_node *root = NULL;
-	//root = newNode(2,'A');
-	//root->left = newNode(0, 'B');
-	//printf("%c\n", root->left->name);
-	//rNode(*root);
-	//root = newNode(c[1],c[0]);
-	//printf("children: %d nodename: %c\n", root->children_no,root->name);
 
 	//traverse through the input array to find numbers
-	while(c[n]){
+	/*while(c[n]){
 		//printf("%c\n", c[n]);
 		if(isdigit(c[n])){
 			int x = c[n] - '0';
 			printf("NUMBER: %d\n", x);
-			//recursivenode()
+			root = newNode(x,c[n-1]);
+			if(x=2){
+			rNode(root,x,c[n+1],c[n+2]);
+			}else if(x=1){
+			rNode(root,x,c[n+1],' ');
+			}else if(x=0){
+			rNode(root,x,' ',' ');
+			}
 			}
 		n++;
-	}
-	// goes through c[n] array
-	// recursively calls everytime sees ' '
-/*
-	while(c[n]){
-		if(c[n] == '\n'){
-			printf("new node\n");
-			n++;
-		}
-		n++;
-	}
-*/
-	int i = 0;
+	}*/
 
-	while(!feof(fp)){
 		fgets(s, 150, fp);
 		x = s[2] - '0';
-		printf("FIRST:%C CN: %d LEFT: %c RIGHT: %c\n", s[0], x, s[4], s[6]);
+
+		//printf("FIRST:%C CN: %d LEFT: %c RIGHT: %c\n", s[0], x, s[4], s[6]);
+			//Creates tree if no root yet
 			if(!root){
-				printf("\nroot created\n");
+				printf("\nTREE BEING CREATED:\n");
 				root = newNode(x,s[0]);
 				rNode(root, x, s[4], s[6]);
-				printf("\nexits recursion ROOT\n");
 			}
-			else
-				printf("root tree already exists\n");
-				//print_inorder(root);
-		}
+				printf("\nTerminating Ptree:\n");
+				//printf("===========FORMAT=============:\n");
+				//printf("left<-[Name | Original Children]->right\n");
+				print_tree(root);
+		//}
 	
-
 	fclose(fp);
 }
