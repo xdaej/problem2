@@ -1,0 +1,33 @@
+You have entered file: input2.txt
+TREE BEING CREATED:
+I'm in the parent 1199, my child is 1200
+I'm the child 1200, my parent is 1199
+I'm in the parent 1200, my child is 1201
+I'm the child 1201, my parent is 1200
+ - - SLEEPING - - HIT LEAF NODE - - SLEEPING - -
+ - - SLEEPING - - HIT LEAF NODE - - SLEEPING - -
+
+Terminating Ptree:
+B <-[A | 2]-> C
+D <-[B | 1]-> 
+ <-[D | 0]-> 
+ <-[C | 0]-> 
+
+Terminating Ptree:
+B <-[A | 2]-> 
+D <-[B | 1]-> 
+ <-[D | 0]-> 
+ - - SLEEPING - - HIT LEAF NODE - - SLEEPING - -
+
+Terminating Ptree:
+B <-[A | 2]-> C
+ <-[B | 1]-> 
+ <-[C | 0]-> 
+
+Terminating Ptree:
+B <-[A | 2]-> 
+ <-[B | 1]-> 
+
+Terminating Ptree:
+ <-[A | 2]-> 
+
